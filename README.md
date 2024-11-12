@@ -5,7 +5,6 @@ The current_implementation add an UI with IMGUI and a quick modification of the 
  ## Features we aimed for
 -Visualisation of a 3d, a 2d Mesh and a cloud point (only obj and txt were tested) : Wireframe, Normal calculated with Laplacian and Mesh Curvature
 -Triangulation of a 2d mesh with Delaunay's triangle with iterative method and Bowyer-Watson).
--Visualisation in real time of said triangulation
 -Ray casting to allow user to add a point/or flip and edge and see the triangulation unfold (Still working on that one)
 
  ##  Image of some of the results: (Most are before the UI)
