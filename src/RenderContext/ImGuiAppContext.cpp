@@ -47,7 +47,7 @@ bool init(GLFWwindow*& window)
     initGlobalStyle();
     SetupImGuiFonts();
     showrenderingarea = true;
-    showreggrow = false;
+    showreggrow = false;   
     
     return 1;
 }
@@ -66,6 +66,7 @@ bool show_another_window = true;
 void Render()
 {
     // Take care of each Ui components
+    
     ShowExampleAppDockSpace();
     ShowImageRenderingArea();
 }

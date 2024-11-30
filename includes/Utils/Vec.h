@@ -23,7 +23,7 @@ struct Vec
   Vec(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {};
   Vec(const Vec &other) : x(other.x), y(other.y), z(other.z) {}
 
-  T operator[](int axis)
+  T& operator[](int axis)
   {
     switch (axis)
     {
@@ -166,9 +166,9 @@ struct Vec
 
   friend std::ostream &operator<<(std::ostream &os, const Vec<T> &vec)
   {
-    os << "x: " << vec.x
-       << "y: " << vec.y
-       << "z: " << vec.z << std::endl;
+    os << "x:" << vec.x
+       << " y:" << vec.y
+       << " z:" << vec.z << std::endl;
     return os;
   }
 };

@@ -21,7 +21,7 @@ Mat<uint8_t> loadImg(const char *imagePath, bool flip, int nbchan)
     size_t size = sizeof(image) / sizeof(image[0]);
     std::vector<unsigned char> vecImg(image, image + size);
 
-    int final_chan = nbchan ? (nbchan != 0) : channels;
+    int final_chan = (nbchan != 0) ? (nbchan) : channels;
     Mat<unsigned char> imgMat(image, height, width, final_chan);
     // Considered channel is the desired number, not the actual number
     // Mat<unsigned char> imgMat(image,height, width, nbchan) ;

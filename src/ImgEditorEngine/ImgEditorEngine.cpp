@@ -12,22 +12,27 @@ namespace appobj
     OpenGLEngine glengine;
     Mesh meshobject; // here
 
-    // TODO: Move it
     std::vector<Vertices> curr_mesh_bound; // Reposition
     float mesh_scaling;                    // Uppers caling
 
 }
 
-OpenGLEngine::OpenGLEngine() //: activevao(0), activetexture(0)
-{
+OpenGLEngine::OpenGLEngine() {
 
 };
+bool OpenGLEngine::initImrender(const GLFWwindow *window, const int &width, const int &height)
+{
+    //camera_obj = Camera(Vec<float>(0.0f, 0.0f, 0.0f), width, height);
+    Camera camera_obj = Camera(Vec<float>(0.0f, 0.0f, 0.0f), width, height);
+
+    controller = CameraController(std::make_shared<Camera>(),
+                                  std::make_shared<ImGuiInputHandlerC>());
+
+    return initImrender();
+}
 
 bool OpenGLEngine::initImrender()
 {
-    // Initialize the Vao allowing to render the image as a texture
-    // This vao is always a plane taking a Mat<uint8> data as texture.
-    // Create an unique fbo and it's designated rendering texture
     std::vector<Vec<float>> canvas = {
         Vec(-1.0f, -1.0f, 0.0f),
         Vec(-1.0f, 1.0f, 0.0f),
@@ -46,6 +51,7 @@ bool OpenGLEngine::initImrender()
 
     loadedvao = createBuffers(canvas, indices, canvastext);
     // TODO Array of shader for each change
+
     // Init program with the generic loading shader
     prog.init("./ressources/shaders/meshshade.vs", "./ressources/shaders/meshshade.fs");
 
@@ -92,11 +98,11 @@ bool OpenGLEngine::saveTextInst(GLuint &out_texture, const char *filename)
 // TOODO change names of the "output" functions
 // Layer choice
 // Handling current vector states
-// Lot of thing to modify
 
 bool OpenGLEngine::loadMesh(const char *datapath, GLuint *out_texture, int *out_width, int *out_height, bool include_faces, int triangulation)
 {
     std::cout << "Loding mesh at: " << datapath << std::endl;
+
     Mat<uint8_t> tmpmat(*out_height, *out_width, 3, PixlColorSpace::BGR);
     if (include_faces)
     {
@@ -107,10 +113,12 @@ bool OpenGLEngine::loadMesh(const char *datapath, GLuint *out_texture, int *out_
         // 0 would remove the z coordinate
         appobj::meshobject = load_mesh_faceless(datapath, 1);
     }
+
     if (appobj::meshobject.getVerticesNb() <= 0)
     {
         return false;
     }
+
     if (!include_faces)
     {
         std::cout << "Triangulation with algo " << triangulation << std::endl;
@@ -125,6 +133,8 @@ bool OpenGLEngine::loadMesh(const char *datapath, GLuint *out_texture, int *out_
         case 2:
             // Bowyerwatson
             break;
+        case 3:
+            break;
         default:
             break;
         }
@@ -133,12 +143,12 @@ bool OpenGLEngine::loadMesh(const char *datapath, GLuint *out_texture, int *out_
 
     // Second texture may have no purpose out in the current build
     std::cout << "Texture Creation " << tmpmat.getChannels() << std::endl;
-    
+
     initTextRess(imageress, makeTextureMat(0, tmpmat));
-    int chan= 3;
-     Mat<uint8_t> tmptex;
-    
-    initTextRess(meshtexture,read_texture(0,"./ressources/texture/hsv_palette.png",tmptex, chan));
+    int chan = 3;
+    Mat<uint8_t> tmptex;
+
+    initTextRess(meshtexture, read_texture(0, "./ressources/texture/hsv_palette.png", tmptex, chan));
     // TODO Canvas set up Should not be handled here
 
     if (fbo == 0)
@@ -224,6 +234,7 @@ void OpenGLEngine::renderMesh(const int &width, const int &height, const int &di
                               const float &cam_y, const float &cam_z, const float &scale)
 {
     GLenum error;
+    appobj::glengine.controller.update(0); // Not the best place
 
     // Display mode 1 Wireframe, 2 Normals recalcualted with Laplacian, 3 Curvature
     if (display_mode != 1)
@@ -237,24 +248,28 @@ void OpenGLEngine::renderMesh(const int &width, const int &height, const int &di
 
     // Set viewport to correct size
     prog.use();
-    Mat<float> model = Transform::Scale(scale, scale,scale) * Transform::Identity();
-    // Mat<float> projection = Transform::Perspective(50, width / height, 0.01, 1000);
-    Mat<float> projection = Transform::Ortho(0.0f, width, 0.0f, height, -1.0f, 1.0f);
+
+    Mat<float> model = Transform::Scale(scale, scale, scale) * Transform::Identity();
+    Mat<float> projection;
+    //Ugly
+    projection = (appobj::glengine.controller.GetCamera()).get()->projection(display3D);
+    
     // We're specifically working with this view matrix in 2d
     // Mat<float> view = Transform::LookAt(Vec<float>(cam_x, cam_y, cam_z), Vec<float>(0, 0, 0), Vec<float>(0, 1.0, 0.0));
-    Mat<float> view = Transform::Translation(cam_x, cam_y, cam_z);
+    //Mat<float> view = Transform::Translation(cam_x, cam_y, cam_z);
+    Mat<float> view =  (appobj::glengine.controller.GetCamera()).get()->view(display3D);
 
     Mat<float> mv = view * model;
     Mat<float> mvp = projection * mv;
 
-    //prog.addUniform4("modelMatrix", model);
-    //prog.addUniform4("viewMatrix", view);
-    //prog.addUniform4("projectionMatrix", projection);
+    // prog.addUniform4("modelMatrix", model);
+    // prog.addUniform4("viewMatrix", view);
+    // prog.addUniform4("projectionMatrix", projection);
 
-    //prog.addUniform4("mvMatrix", mvp);
+    // prog.addUniform4("mvMatrix", mvp);
     prog.addUniform4("mvpMatrix", mvp);
-    //prog.addUniform1("DisplayMode", display_mode);
-    //prog.addUniform1("3dmode", display3D);
+    // prog.addUniform1("DisplayMode", display_mode);
+    // prog.addUniform1("3dmode", display3D);
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -277,7 +292,7 @@ void OpenGLEngine::renderMesh(const int &width, const int &height, const int &di
                   << std::endl;
     }
 
-     bindTexture(meshtexture, prog.shader_id, "mesh_color");
+    bindTexture(meshtexture, prog.shader_id, "mesh_color");
 
     // Directly use the size of the to color arrray sinnce no ebo were crearted for this
     // TODO create draw function that cna make this choice
@@ -308,7 +323,7 @@ void OpenGLEngine::updateMesh(bool indices, bool normals, bool new_texcoords, bo
     // ALways and Vertices
     if (display3D)
     {
-        std::cout<<"Update to 3d"<<std::endl;
+        std::cout << "Update to 3d" << std::endl;
 
         updateTerrainto3D();
     }

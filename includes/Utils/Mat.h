@@ -41,6 +41,7 @@ private:
 public:
     // Constructors
     Mat();
+    Mat(int rows, int cols);
     Mat(int rows, int cols, int channels, PixlColorSpace clrspace = PixlColorSpace::RGB);
     Mat(T *_data, int _rows, int _cols, int _channels);
     Mat(const Mat &otherMat);
@@ -80,19 +81,18 @@ public:
     void toHsvSpace();
 
     // Operator //
+    // std;;ranges::swap could be useful
 
     // TODO, overload or keep the non const ref pass
-    //  Split a Matimg object according to it's number of channels
+    // Split a Matimg object according to it's number of channels
     // Passing channel as &
     void splitMat(std::vector<T> *channel1, std::vector<T> *channel2, std::vector<T> *channel3 = nullptr, std::vector<T> *channel4 = nullptr) const;
     void splitMat(Mat<T> *channels) const;
 
     // Ouptut local maximum and minimum of a 1 channel image
-    void minMaxLoc(float &min, float &max) const;
-    void minMaxLoc(int &min, int &max) const;
+    void minMaxLoc(T &min, T &max) const;
     // Maximum value of a single channel
-    void minMaxLocChan(float &min, float &max, int channel) const;
-    void minMaxLocChan(int &min, int &max, int channel) const;
+    void minMaxLocChan(T &min, T &max, int channel) const;
 
     Mat<T> transpose() const;
 
@@ -179,7 +179,6 @@ public:
     }
 
     /*
-
     Inversion Matricielle
 
     Déterminant Matriciel
@@ -195,12 +194,10 @@ public:
     template <typename T2>
     T2 atCast(int row, int col, int channel);
     template <typename T2>
-
     const T2 atCast(int row, int col, int channel) const;
 
     // TODO Convert it to std::array
     T &at(int row, int col);
-
     const T *at(int row, int col) const;
 
     T value_at(int row, int col) const;
@@ -250,11 +247,16 @@ template <typename T>
 Mat<T>::Mat() : data(nullptr), rows(0), cols(0), channels(0), clrspace(PixlColorSpace::RGB){
                                                                   // std::cout << "Creared fro noth" << std::endl;
                                                               };
+
+template <typename T>
+Mat<T>::Mat(int _rows, int _cols) : rows(_rows), cols(_cols), channels(1), clrspace(PixlColorSpace::RGB), data(nullptr)
+{
+    data = new T[rows * cols];
+}
 template <typename T>
 Mat<T>::Mat(int _rows, int _cols, int _channels, PixlColorSpace _clrspace) : rows(_rows), cols(_cols), channels(_channels), clrspace(_clrspace), data(nullptr)
 {
-    // std::cout << "Creared rows shit" << std::endl;
-    data = new T[rows * cols * channels];
+     data = new T[rows * cols * channels];
     this->zeros();
 }
 
@@ -262,8 +264,6 @@ template <typename T>
 Mat<T>::Mat(T *_data, int _rows, int _cols, int _channels) : rows(_rows),
                                                              cols(_cols), channels(_channels)
 {
-    // std::cout << "Creared from many shit" << std::endl;
-
     data = new T[rows * cols * channels];
     std::memmove(data, _data, rows * cols * channels * sizeof(T));
     clrspace = (channels > 2) ? PixlColorSpace::RGB : PixlColorSpace::Gray;
@@ -292,8 +292,6 @@ Mat<T>::Mat(Mat<T> &&otherMat) noexcept
     : data(otherMat.data), rows(otherMat.rows),
       cols(otherMat.cols), channels(otherMat.channels)
 {
-    // std::cout << "Creared from assign shit" << std::endl;
-
     if (this != &otherMat)
     {
         clrspace = otherMat.clrspace;
@@ -314,13 +312,6 @@ void Mat<T>::zeros()
 template <typename T>
 void Mat<T>::setTo(T val)
 {
-    // TOTRY Benchmark this
-    /*
-    for (int i = 0; i < rows * cols * channels; ++i)
-    {
-        // Default constructor of each value
-        data[i] = val;
-    }*/
     std::fill(data, data + rows * cols * channels, val);
 }
 
@@ -377,7 +368,7 @@ void Mat<T>::splitMat(std::vector<T> *channel1,
 template <typename T>
 void Mat<T>::splitMat(Mat<T> *channels) const
 {
-    // Ensure the image has at elast 2 channels (GrayA)
+    // Ensure the image has at least 2 channels (GrayA)
     int nbchannels = this->getChannels();
 
     if (nbchannels < 2)
@@ -400,26 +391,9 @@ void Mat<T>::splitMat(Mat<T> *channels) const
 
 // Ouptut local maximum and minimum of a 1 channel image or simply the highest value
 template <typename T>
-void Mat<T>::minMaxLoc(float &min, float &max) const
+void Mat<T>::minMaxLoc(T &min, T &max) const
 {
-    min = std::numeric_limits<float>::max();
-    max = 0.0f;
-    for (int i = 0; i < rows * cols * channels; ++i)
-    {
-        if (data[i] < min)
-        {
-            min = data[i];
-        }
-        if (data[i] > max)
-        {
-            max = data[i];
-        }
-    }
-}
-template <typename T>
-void Mat<T>::minMaxLoc(int &min, int &max) const
-{
-    min = std::numeric_limits<int>::max();
+    min = std::numeric_limits<T>::max();
     max = 0.0f;
     for (int i = 0; i < rows * cols * channels; ++i)
     {
@@ -436,9 +410,9 @@ void Mat<T>::minMaxLoc(int &min, int &max) const
 
 // TODO implement it
 template <typename T>
-void Mat<T>::minMaxLocChan(float &min, float &max, int channel) const
+void Mat<T>::minMaxLocChan(T &min, T &max, int channel) const
 {
-    min = std::numeric_limits<float>::max();
+    min = std::numeric_limits<T>::max();
     max = 0.0f;
     for (int i = 0; i < rows * cols * channels; ++i)
     {
@@ -452,23 +426,7 @@ void Mat<T>::minMaxLocChan(float &min, float &max, int channel) const
         }
     }
 }
-template <typename T>
-void Mat<T>::minMaxLocChan(int &min, int &max, int channel) const
-{
-    min = std::numeric_limits<int>::max();
-    max = 0.0f;
-    for (int i = 0; i < rows * cols * channels; ++i)
-    {
-        if (data[i] < min)
-        {
-            min = data[i];
-        }
-        if (data[i] > max)
-        {
-            max = data[i];
-        }
-    }
-}
+
 // Operator //
 template <typename T>
 T Mat<T>::sumComponents() const
@@ -1007,14 +965,12 @@ Mat<T> operator/(const Mat<T> &Mata, const T &scalar)
 namespace Transform
 {
     // TODO Move to appropriate section
-    
-    Vec4 mat4mult(const Mat<float> &mat, const Vec4 &vec);
-  
 
+    Vec4 mat4mult(const Mat<float> &mat, const Vec4 &vec);
     inline float to_radians(float angle_degree);
 
     Mat<float> Translation(float tx, float ty, float tz);
-    bool Inverse( Mat<float> &to_invert);
+    bool Inverse(Mat<float> &to_invert);
 
     Mat<float> Scale(float sx, float sy, float sz);
 

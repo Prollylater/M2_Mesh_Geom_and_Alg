@@ -2,7 +2,7 @@
 
 ImgApp::ImgApp() : main_window()
 {
-
+  int width, height;
   if (!OpenGlContext::initGlContext(main_window, 1024, 576))
   {
     std::cerr << "OpenGLContext initialization failed" << std::endl;
@@ -15,10 +15,9 @@ ImgApp::ImgApp() : main_window()
     std::cerr << "ImGuiAppContext initialization failed" << std::endl;
   }
 
-//Not quite convinced by postion
-  // TODO CREATE ENGINE AND DO STUF
-  // Declaring engine here
-  if (!appobj::glengine.initImrender())
+  glfwGetWindowSize(main_window, & width, &height);
+
+  if (!appobj::glengine.initImrender(main_window,width,height ))
   {
     std::cerr << "Buffers Initialization failed" << std::endl;
   }
@@ -33,7 +32,7 @@ void ImgApp::start()
     OpenGlContext::preRender();
 
     ImGuiAppContext::preRender();
-
+  
     ImGuiAppContext::Render();
 
     OpenGlContext::postRender(main_window);

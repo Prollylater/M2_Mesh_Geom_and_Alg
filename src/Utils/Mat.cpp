@@ -23,8 +23,88 @@ namespace Transform
         return result;
     }
 
-    // Quick  Matrix inversion based on glu's
     bool Inverse(Mat<float> &to_invert)
+    {
+        int n = to_invert.getRows();
+        if (n != to_invert.getCols())
+        {
+            std::cerr << "Matrix must be square!" << std::endl;
+            return false;
+        }
+
+        Mat<float> augmented(n, 2 * n);
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                augmented.at(i, j) = to_invert.at(i, j);
+                augmented.at(i, n + j) = (i == j) ? 1 : 0;
+            }
+        }
+        auto swap_rows = [&](Mat<float> &mat, int row_indexa, int row_indexb)
+        {
+            for (int i = 0; i < mat.getCols(); i++)
+            {
+                std::swap(mat.at(row_indexa, i), mat.at(row_indexb, i));
+            }
+        };
+
+        auto multiply_rows = [&](Mat<float> &mat, int row_index, float scalar)
+        {
+            for (int i = 0; i < mat.getCols(); i++)
+            {
+                mat.at(row_index, i) = mat.at(row_index, i) * scalar;
+            }
+        };
+        auto add_to_rows = [&](Mat<float> &mat, int row_index, int source_row, float scalar)
+        {
+            for (int i = 0; i < mat.getCols(); i++)
+            {
+                mat.at(row_index, i) += scalar * mat.at(source_row, i);
+            }
+        };
+
+        for (int i = 0; i < n; i++)
+        {
+
+            // Quick check to see if pivot is 0
+            if (augmented.at(i, i) == 0)
+            {
+                for (int j = i + 1; j < n; j++)
+                {
+                    if (augmented.at(j, i) != 0)
+                    {
+                        swap_rows(augmented, i, j);
+                        break;
+                    }
+                }
+            }
+
+            // Normalize pivot
+
+            multiply_rows(augmented, i, 1 / augmented.at(i, i));
+
+            // Zeroing rest of the column
+            for (int j = 0; j < n; j++)
+            {
+                if (i != j)
+                {
+                    add_to_rows(augmented, j, i, -augmented.at(j, i));
+                }
+            }
+        }
+        for (int j = 0; j < n; j++)
+        {
+            for (int i = 0; i < n; i++)
+            {
+
+                to_invert.at(j, i) = augmented.at(j, n + i);
+            }
+        }
+
+        return true;
+    }
+    bool InverseTmp(Mat<float> &to_invert)
     {
 
         if (to_invert.getRows() != to_invert.getCols() || to_invert.getRows() != 4)

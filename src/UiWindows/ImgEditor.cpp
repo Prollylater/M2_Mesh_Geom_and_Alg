@@ -16,6 +16,7 @@ static std::vector<Vertices> world_coordinate;
 // MainWinSt:: Display is currently in a weird stop as it only serve at init
 void ShowImageRenderingArea()
 {
+    
     // create a file browser instance
     static ImGui::FileBrowser fileDialog;
 
@@ -79,6 +80,10 @@ void ShowImageRenderingArea()
                 if (ImGui::RadioButton("Bowyer Watson", triangulationmode == 2))
                 {
                     triangulationmode = 2;
+                }
+                 if (ImGui::RadioButton("Real Time Triangulation", triangulationmode == 3))
+                {
+                    triangulationmode = 3;
                 }
                 if (ImGui::RadioButton("Already triangulated", triangulationmode == 4))
                 {

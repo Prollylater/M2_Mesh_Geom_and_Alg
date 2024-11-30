@@ -892,6 +892,106 @@ void Mesh::incremental_triangulate2()
         counter++;
     }
 }
+/*
+std::vector<unsigned int>  Mesh::incremental_triangulate2_step_start()
+
+{
+    if (getFacesNb() > 0 || getVerticesNb() == 0)
+    {
+        std::cout << "Triangulation must be done right after creation of the point cloud" << std::endl;
+        return;
+    };
+
+    // Create Convex Hull through graham scan
+    std::cout << "Creating convex hull" << std::endl;
+    // The point the closest of the centroid we could find
+    unsigned int center = 0;
+    convex_hull = grahamScan(vertices, center);
+
+    if (convex_hull.size() == vertices.size())
+    {
+        return;
+    };
+    // First insertion
+    size_t convex_hull_size = convex_hull.size();
+    for (int i = 0; i < convex_hull_size; i++)
+    {
+        swapVerticeFace(convex_hull[i]) = makeFace(center, convex_hull[i % (convex_hull_size)], convex_hull[(i + 1) % (convex_hull_size)]);
+    }
+    for (int i = 0; i < convex_hull_size; i++)
+    {
+        faces[i].neighbor[2] = ((i - 1) + convex_hull_size) % convex_hull_size;
+        faces[i].neighbor[1] = (i + 1) % convex_hull_size;
+    }
+
+    lawson(*this);
+    std::vector<unsigned int> pre_inserted(convex_hull);
+    pre_inserted.push_back(center);
+
+    return pre_inserted;
+}
+
+void Mesh::incremental_triangulate2_step(std::vector<unsigned int>& pre_inserted)
+{
+    // Create a face 0 with the three first point
+   int counter = 0;
+    int center = 0;
+    if (convex_hull.empty())
+    {
+        pre_inserted = incremental_triangulate2_step_start();
+    }
+
+    //  For this step, we won't need to consider the insertion outside the convex hull at all
+    int counter = 0;
+    int size = vertices.size();
+    std::queue<Edges> edge_queue;
+    EdgeSet edge_set;
+    // std::vector<unsigned int> traversal = generateUniqueRandomNumbers(size, pre_inserted);
+    edge_set.clear();
+    bool skip = 0;
+    for (int i = 0; i < pre_inserted.size(); i++)
+    {
+        if (counter == pre_inserted[i])
+        {
+            skip = 1;
+        }
+    }
+    if (skip == 0)
+    {
+        std::cout << "Inserting point number " << vertices[counter] << " " << vertices[counter] << std::endl;
+        unsigned face;
+
+        // Pre extract "border-edge"
+        Faces face_backup = insert_point_convexless(counter, face);
+        std::array<unsigned, 3> new_faces = {face, faces.size() - 1, faces.size() - 2};
+
+        for (size_t i = 0; i < 3; i++)
+        {
+
+            extractEdgesFromFace(edge_queue, edge_set, new_faces[i]);
+            while (!edge_queue.empty())
+            {
+                Edges current_edge = edge_queue.front();
+                std::cout << current_edge << std::endl;
+
+                edge_queue.pop();
+                // We avoid flipping the new insertion
+                if (current_edge.contains(counter))
+                {
+                    continue;
+                };
+
+                if (!isDelaunay(current_edge))
+                {
+                    flip_edge(current_edge);
+                }
+            }
+        }
+        edge_set.clear();
+    }
+
+    counter++;
+}*/
 
 Faces Mesh::insert_point_convexless(const unsigned int &new_point, unsigned int &vertices_face)
 {

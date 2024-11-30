@@ -313,7 +313,7 @@ public:
             // Useful in this implem ?
             const float det = dotProduct(edge1, normal_ray_e2);
             ////////////
-            
+
             const float inv_det = 1.0 / det;
             const Vertices ray_vo = orign - vertices[triangles.vertices[0]];
 
@@ -329,7 +329,7 @@ public:
 
             if (val_v < 0 || val_v + val_u > 1)
             {
-               continue;
+                continue;
             }
 
             t = inv_det * dotProduct(edge2, cross_e1);
@@ -339,7 +339,7 @@ public:
 
                 return i;
             }
-            std::cout<<"No this" << i <<std::endl;
+            std::cout << "No this" << i << std::endl;
             i++;
         }
 
@@ -414,6 +414,9 @@ public:
 
     void incremental_triangulate();
     void incremental_triangulate2();
+    //Divide incremental_triangulate into two function for real time
+    std::vector<unsigned int> incremental_triangulate2_step_start();
+    void incremental_triangulate2_step(std::vector<unsigned int>& );
     // TODO  All really needed ?
     void extractEdges(std::queue<Edges> &edge_queue);
     void extractEdgesFromFace(std::queue<Edges> &edge_queue, EdgeSet &edge_set, unsigned int &face, const Faces &back_up);
