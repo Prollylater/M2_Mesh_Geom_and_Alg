@@ -1,3 +1,0 @@
-/home/rubuntu/Documents/MIfImage/Projetim/Delaunay/CMakeFiles/test.dir
-/home/rubuntu/Documents/MIfImage/Projetim/Delaunay/CMakeFiles/edit_cache.dir
-/home/rubuntu/Documents/MIfImage/Projetim/Delaunay/CMakeFiles/rebuild_cache.dir
